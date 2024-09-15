@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text-to-Speech and Speech-to-Text</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            position: relative; /* For loader positioning */
+            min-height: 100vh; /* Ensure full viewport height */
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative; /* For loader positioning */
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box; /* Include padding and border in element's total width and height */
+        }
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .record-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .record-controls button {
+            background-color: #28a745;
+        }
+        .record-controls button.stop {
+            background-color: #dc3545;
+        }
+        .audio-player {
+            margin-top: 10px;
+        }
+        .transcription {
+            margin-top: 20px;
+        }
+        .loader {
+            border: 16px solid #f3f3f3; /* Light grey */
+            border-top: 16px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            position: absolute; /* Position the loader inside the container */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none; /* Initially hidden */
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .recording-indicator {
+            font-size: 18px;
+            color: #dc3545;
+            text-align: center;
+            margin-top: 10px;
+            display: none; /* Initially hidden */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Text-to-Speech and Speech-to-Text</h1>
+
+        <!-- Text-to-Speech Section -->
+        <div class="section" id="text-to-speech-section">
+            <h2>Text-to-Speech</h2>
+            <textarea id="text-input" rows="4" placeholder="Enter text here..."></textarea>
+            <button onclick="convertTextToSpeech()">Generate Audio</button>
+            <div class="audio-player" id="text-audio-player" style="display: none;">
+                <p>Generated Audio:</p>
+                <audio controls id="audio-output">
+                    Your browser does not support the audio element.
+                </audio>
+            </div>
+        </div>
+
+        <!-- Speech-to-Text Section -->
+        <div class="section" id="speech-to-text-section">
+            <h2>Speech-to-Text</h2>
+            <div class="record-controls">
+                <button onclick="startRecording()">Start Recording</button>
+                <button class="stop" onclick="stopRecording()" disabled>Stop Recording</button>
+            </div>
+            <div id="recording-indicator" class="recording-indicator">
+                Recording in progress...
+            </div>
+            <div id="audio-player-div" class="audio-player" style="display: none;">
+                <p>Recorded Audio:</p>
+                <audio controls id="recorded-audio-player">
+                    Your browser does not support the audio element.
+                </audio>
+            </div>
+            <button onclick="uploadAudioFile()" id="upload-button" style="display: none;">Upload and Transcribe</button>
+            <div class="transcription" id="transcription-output" style="display: none;">
+                <p>Transcription:</p>
+                <p id="transcription-text"></p>
+            </div>
+        </div>
+
+        <div id="loader" class="loader"></div>
+    </div>
+
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+
+        async function startRecording() {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.ondataavailable = event => {
+                audioChunks.push(event.data);
+            };
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                const audioURL = URL.createObjectURL(audioBlob);
+                const audioPlayer = document.getElementById('recorded-audio-player');
+                audioPlayer.src = audioURL;
+                document.getElementById('audio-player-div').style.display = 'block';
+                document.getElementById('upload-button').style.display = 'block';
+                audioChunks = [];
+            };
+
+            mediaRecorder.start();
+            document.querySelector('button[onclick="startRecording()"]').disabled = true;
+            document.querySelector('button[onclick="stopRecording()"]').disabled = false;
+            document.getElementById('recording-indicator').style.display = 'block'; // Show recording indicator
+        }
+
+        function stopRecording() {
+            mediaRecorder.stop();
+            document.querySelector('button[onclick="startRecording()"]').disabled = false;
+            document.querySelector('button[onclick="stopRecording()"]').disabled = true;
+            document.getElementById('recording-indicator').style.display = 'none'; // Hide recording indicator
+        }
+
+        async function uploadAudioFile() {
+            const audioPlayer = document.getElementById('recorded-audio-player');
+            const audioBlob = await fetch(audioPlayer.src).then(res => res.blob());
+            const formData = new FormData();
+            formData.append('file', audioBlob, 'recorded-audio.wav');
+
+            const loader = document.getElementById('loader');
+            const transcriptionDiv = document.getElementById('transcription-output');
+            loader.style.display = 'block';
+
+            try {
+                const response = await fetch('/speechtotext', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('transcription-text').innerText = data.transcription;
+                    transcriptionDiv.style.display = 'block';
+                } else {
+                    alert('Error transcribing audio.');
+                }
+            } catch (error) {
+                alert('An error occurred: ' + error.message);
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        async function convertTextToSpeech() {
+            const text = document.getElementById('text-input').value;
+            if (!text.trim()) {
+                alert('Please enter some text.');
+                return;
+            }
+
+            const loader = document.getElementById('loader');
+            const audioPlayerDiv = document.getElementById('text-audio-player');
+            loader.style.display = 'block';
+
+            try {
+                const response = await fetch('/texttospeech', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+
+                if (response.ok) {
+                    const audioBlob = await response.blob();
+                    const audioURL = URL.createObjectURL(audioBlob);
+                    const audioPlayer = document.getElementById('audio-output');
+                    audioPlayer.src = audioURL;
+                    audioPlayerDiv.style.display = 'block';
+                } else {
+                    alert('Error generating audio.');
+                }
+            } catch (error) {
+                alert('An error occurred: ' + error.message);
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
