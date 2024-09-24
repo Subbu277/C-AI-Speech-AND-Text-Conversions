@@ -2,8 +2,12 @@ import os
 from google.cloud import texttospeech
 from google.cloud import speech_v1 as speech
 
-text_to_audio_client = texttospeech.TextToSpeechClient()
-audio_to_text_client = speech.SpeechClient()
+google_api_key = os.environ.get('google_api_key')
+
+client_options = {"api_key": google_api_key}
+
+text_to_audio_client = texttospeech.TextToSpeechClient(client_options=client_options)
+audio_to_text_client = speech.SpeechClient(client_options=client_options)
 
 def text_to_audio(text):
     synthesis_input = texttospeech.SynthesisInput(text=text)
@@ -14,16 +18,9 @@ def text_to_audio(text):
 
 def audio_to_text(content):
     audio = speech.RecognitionAudio(content=content)
-    config = speech.RecognitionConfig(encoding=speech.RecognitionConfig.AudioEncoding.MP3, sample_rate_hertz=16000,  language_code='en-US')
+    config = speech.RecognitionConfig(encoding=speech.RecognitionConfig.AudioEncoding.MP3, language_code='en-US')
     response = audio_to_text_client.recognize(config=config, audio=audio)
     result_text = ""
     for result in response.results:
         result_text = result_text + result.alternatives[0].transcript
     return result_text
-
-
-
-
-
-
-

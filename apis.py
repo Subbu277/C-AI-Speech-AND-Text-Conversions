@@ -45,7 +45,7 @@ def audiototext_route():
 
 
 
-@health_api.route('/health', methods=['GET'])
+@health_api.route('s', methods=['GET'])
 def health():
     time.sleep(5)
     return jsonify({"message": "Server Health : Running"}), 200
