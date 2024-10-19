@@ -108,6 +108,10 @@
                     Your browser does not support the audio element.
                 </audio>
             </div>
+            <div id="sentiment-output" class="transcription" style="display: none;">
+                <p>Sentiment Analysis:</p>
+                <p id="sentiment-text"></p>
+            </div>
         </div>
 
         <!-- Speech-to-Text Section -->
@@ -130,6 +134,10 @@
             <div class="transcription" id="transcription-output" style="display: none;">
                 <p>Transcription:</p>
                 <p id="transcription-text"></p>
+                <div id="sentiment-output-transcription" class="transcription" style="display: none;">
+                    <p>Sentiment Analysis:</p>
+                    <p id="sentiment-text-transcription"></p>
+                </div>
             </div>
         </div>
 
@@ -189,6 +197,9 @@
                     const data = await response.json();
                     document.getElementById('transcription-text').innerText = data.transcription;
                     transcriptionDiv.style.display = 'block';
+
+                    // Analyze sentiment for transcription
+                    await analyzeSentiment(data.transcription, 'transcription');
                 } else {
                     alert('Error transcribing audio.');
                 }
@@ -225,6 +236,9 @@
                     const audioPlayer = document.getElementById('audio-output');
                     audioPlayer.src = audioURL;
                     audioPlayerDiv.style.display = 'block';
+
+                    // Analyze sentiment for input text
+                    await analyzeSentiment(text, 'text');
                 } else {
                     alert('Error generating audio.');
                 }
@@ -232,6 +246,33 @@
                 alert('An error occurred: ' + error.message);
             } finally {
                 loader.style.display = 'none';
+            }
+        }
+
+        async function analyzeSentiment(text, type) {
+            try {
+                const response = await fetch('/sentiment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (type === 'text') {
+                        document.getElementById('sentiment-text').innerText = data.sentiment;
+                        document.getElementById('sentiment-output').style.display = 'block';
+                    } else if (type === 'transcription') {
+                        document.getElementById('sentiment-text-transcription').innerText = data.sentiment;
+                        document.getElementById('sentiment-output-transcription').style.display = 'block';
+                    }
+                } else {
+                    alert('Error analyzing sentiment.');
+                }
+            } catch (error) {
+                alert('An error occurred: ' + error.message);
             }
         }
     </script>
