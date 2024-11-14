@@ -3,6 +3,7 @@ from google.cloud import texttospeech
 from google.cloud import speech_v1 as speech
 from google.cloud import language_v1
 
+google_api_key = os.environ.get('google_api_key')
 
 client_options = {"api_key": google_api_key}
 

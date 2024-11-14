@@ -8,20 +8,6 @@ speechtotext_api = Blueprint('speechtotext_api', __name__)
 health_api = Blueprint('health', __name__)
 ui_api = Blueprint('ui', __name__)
 
-@texttospeech_api.route('/texttospeech', methods=['POST'])
-def texttospeech():
-    if not request.json or 'text' not in request.json:
-        return jsonify({'error': 'No text provided'}), 400
-
-    text = request.json['text']
-    response = text_to_audio(text)
-
-    audio_stream = BytesIO(response.audio_content)
-    audio_stream.seek(0)
-
-    return send_file(audio_stream,mimetype='audio/mpeg',as_attachment=True,download_name='output.mp3')
-
-
 @speechtotext_api.route('/speechtotext', methods=['POST'])
 def audiototext_route():
    if 'file' not in request.files:
@@ -40,17 +26,8 @@ def audiototext_route():
 
    audio_content = file.read()
    text = audio_to_text(audio_content)
-
-   return jsonify({'transcription': text})
-
-@speechtotext_api.route('/sentiment', methods=['POST'])
-def sentiment_route():
-    if not request.json or 'text' not in request.json:
-        return jsonify({'error': 'No text provided'}), 400
-
-    text = request.json['text']
-    response = analyze_sentiment(text)
-    return jsonify({'sentiment': response})
+   score = analyze_sentiment(text)
+   return jsonify({'transcription': text,'sentiment':score})
 
 
 

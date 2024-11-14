@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text-to-Speech and Speech-to-Text</title>
+    <title>Speech-to-Text</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -29,13 +29,6 @@
         }
         .section {
             margin-bottom: 20px;
-        }
-        textarea {
-            width: 100%;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            box-sizing: border-box; /* Include padding and border in element's total width and height */
         }
         button {
             background-color: #007bff;
@@ -95,24 +88,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Text-to-Speech and Speech-to-Text</h1>
-
-        <!-- Text-to-Speech Section -->
-        <div class="section" id="text-to-speech-section">
-            <h2>Text-to-Speech</h2>
-            <textarea id="text-input" rows="4" placeholder="Enter text here..."></textarea>
-            <button onclick="convertTextToSpeech()">Generate Audio</button>
-            <div class="audio-player" id="text-audio-player" style="display: none;">
-                <p>Generated Audio:</p>
-                <audio controls id="audio-output">
-                    Your browser does not support the audio element.
-                </audio>
-            </div>
-            <div id="sentiment-output" class="transcription" style="display: none;">
-                <p>Sentiment Analysis:</p>
-                <p id="sentiment-text"></p>
-            </div>
-        </div>
+        <h1>Speech-to-Text</h1>
 
         <!-- Speech-to-Text Section -->
         <div class="section" id="speech-to-text-section">
@@ -196,10 +172,9 @@
                 if (response.ok) {
                     const data = await response.json();
                     document.getElementById('transcription-text').innerText = data.transcription;
+                    document.getElementById('sentiment-text-transcription').innerText = `Sentiment Score: ${data.sentiment}`;
                     transcriptionDiv.style.display = 'block';
-
-                    // Analyze sentiment for transcription
-                    await analyzeSentiment(data.transcription, 'transcription');
+                    document.getElementById('sentiment-output-transcription').style.display = 'block';
                 } else {
                     alert('Error transcribing audio.');
                 }
@@ -207,72 +182,6 @@
                 alert('An error occurred: ' + error.message);
             } finally {
                 loader.style.display = 'none';
-            }
-        }
-
-        async function convertTextToSpeech() {
-            const text = document.getElementById('text-input').value;
-            if (!text.trim()) {
-                alert('Please enter some text.');
-                return;
-            }
-
-            const loader = document.getElementById('loader');
-            const audioPlayerDiv = document.getElementById('text-audio-player');
-            loader.style.display = 'block';
-
-            try {
-                const response = await fetch('/texttospeech', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ text: text })
-                });
-
-                if (response.ok) {
-                    const audioBlob = await response.blob();
-                    const audioURL = URL.createObjectURL(audioBlob);
-                    const audioPlayer = document.getElementById('audio-output');
-                    audioPlayer.src = audioURL;
-                    audioPlayerDiv.style.display = 'block';
-
-                    // Analyze sentiment for input text
-                    await analyzeSentiment(text, 'text');
-                } else {
-                    alert('Error generating audio.');
-                }
-            } catch (error) {
-                alert('An error occurred: ' + error.message);
-            } finally {
-                loader.style.display = 'none';
-            }
-        }
-
-        async function analyzeSentiment(text, type) {
-            try {
-                const response = await fetch('/sentiment', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ text: text })
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    if (type === 'text') {
-                        document.getElementById('sentiment-text').innerText = data.sentiment;
-                        document.getElementById('sentiment-output').style.display = 'block';
-                    } else if (type === 'transcription') {
-                        document.getElementById('sentiment-text-transcription').innerText = data.sentiment;
-                        document.getElementById('sentiment-output-transcription').style.display = 'block';
-                    }
-                } else {
-                    alert('Error analyzing sentiment.');
-                }
-            } catch (error) {
-                alert('An error occurred: ' + error.message);
             }
         }
     </script>
