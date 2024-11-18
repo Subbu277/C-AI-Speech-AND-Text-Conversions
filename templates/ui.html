@@ -113,6 +113,7 @@
                 <div id="sentiment-output-transcription" class="transcription" style="display: none;">
                     <p>Sentiment Analysis:</p>
                     <p id="sentiment-text-transcription"></p>
+                    <p id="sentiment-score-transcription"></p>
                 </div>
             </div>
         </div>
@@ -171,8 +172,15 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    document.getElementById('transcription-text').innerText = data.transcription;
-                    document.getElementById('sentiment-text-transcription').innerText = `Sentiment Score: ${data.sentiment}`;
+
+                    // Display Transcription
+                    document.getElementById('transcription-text').innerText = data.Text;
+
+                    // Display Sentiment Analysis
+                    document.getElementById('sentiment-text-transcription').innerText = `Sentiment: ${data["Sentiment Analysis"]}`;
+                    document.getElementById('sentiment-score-transcription').innerText = `Sentiment Score: ${data["Sentiment Score"]}`;
+
+                    // Show Transcription and Sentiment Data
                     transcriptionDiv.style.display = 'block';
                     document.getElementById('sentiment-output-transcription').style.display = 'block';
                 } else {
