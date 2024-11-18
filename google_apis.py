@@ -3,9 +3,27 @@ from google.cloud import texttospeech
 from google.cloud import speech_v1 as speech
 from google.cloud import language_v1
 from google.cloud import storage
+import vertexai
+from vertexai.generative_models import GenerativeModel, Part
+
+prompt = """
+Please provide an exact trascript for the audio, followed by sentiment analysis.
+
+Your response should follow the format (json):
+
+Text: USERS SPEECH TRANSCRIPTION
+
+Sentiment Analysis: positive|neutral|negative
+
+Sentiment Score : -1 to 1
+"""
 
 google_api_key = os.environ.get('google_api_key')
+bucket_name = os.environ.get('BUCKET_NAME')
+project_id = os.environ.get('project_id')
 
+vertexai.init(project=project_id, location="us-central1")
+model = GenerativeModel("gemini-1.5-flash-001")
 client_options = {"api_key": google_api_key}
 
 text_to_audio_client = texttospeech.TextToSpeechClient(client_options=client_options)
@@ -28,6 +46,14 @@ def audio_to_text(content):
        result_text = result_text + result.alternatives[0].transcript
    return result_text
 
+def audio_to_text1(audio_file_uri):
+   audio_file = Part.from_uri(audio_file_uri, mime_type="audio/wav")
+   contents = [audio_file, prompt]
+   response = model.generate_content(contents)
+   clean_response = response.text.replace('```json', '').replace('```', '').strip()
+   return clean_response
+
+
 
 def analyze_sentiment(text):
     document = language_v1.Document(content=text, type=language_v1.Document.Type.PLAIN_TEXT)
@@ -40,7 +66,6 @@ def bucket_connection(bucket_name):
     storage_client = storage.Client()
     return storage_client.bucket(bucket_name)
 
-bucket_name = "cnad_image_and_text_uploads"
 bucket_connection = bucket_connection(bucket_name)
 
 def upload_file(file, bucket_object_name):
