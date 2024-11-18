@@ -108,13 +108,20 @@
             </div>
             <button onclick="uploadAudioFile()" id="upload-button" style="display: none;">Upload and Transcribe</button>
             <div class="transcription" id="transcription-output" style="display: none;">
-                <p>Transcription:</p>
+                <p><b>Transcription:</b></p>
                 <p id="transcription-text"></p>
                 <div id="sentiment-output-transcription" class="transcription" style="display: none;">
-                    <p>Sentiment Analysis:</p>
+                    <p><b>Sentiment Analysis:</b></p>
                     <p id="sentiment-text-transcription"></p>
                     <p id="sentiment-score-transcription"></p>
                 </div>
+            </div>
+            <!-- Section for displaying the response audio -->
+            <div id="response-audio-player-div" class="audio-player" style="display: none;">
+                <p>Response Audio:</p>
+                <audio controls id="response-audio-player">
+                    Your browser does not support the audio element.
+                </audio>
             </div>
         </div>
 
@@ -183,6 +190,13 @@
                     // Show Transcription and Sentiment Data
                     transcriptionDiv.style.display = 'block';
                     document.getElementById('sentiment-output-transcription').style.display = 'block';
+
+                    // Display the response audio
+                    const responseAudio = new Blob([new Uint8Array(atob(data.audio).split("").map(c => c.charCodeAt(0)))], { type: 'audio/mp3' });
+                    const responseAudioUrl = URL.createObjectURL(responseAudio);
+                    const responseAudioPlayer = document.getElementById('response-audio-player');
+                    responseAudioPlayer.src = responseAudioUrl;
+                    document.getElementById('response-audio-player-div').style.display = 'block'; // Show response audio player
                 } else {
                     alert('Error transcribing audio.');
                 }
