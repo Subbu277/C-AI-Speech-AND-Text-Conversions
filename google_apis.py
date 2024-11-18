@@ -60,7 +60,6 @@ bucket_connection = bucket_connection(bucket_name)
 def upload_file(file, bucket_object_name):
     blob = bucket_connection.blob(bucket_object_name)
     blob.upload_from_file(file)
-    logger.info(f"------------------- File uploaded to path: {blob.path}")
-    path = "gs://" + blob.path.replace('/b/','')
+    path = "gs://" + bucket_name + "/" + bucket_object_name
     logger.info(f"------------------- File uploaded to url: {path}")
     return path
