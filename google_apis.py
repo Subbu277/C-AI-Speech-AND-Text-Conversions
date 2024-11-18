@@ -2,6 +2,7 @@ import os
 from google.cloud import texttospeech
 from google.cloud import speech_v1 as speech
 from google.cloud import language_v1
+from google.cloud import storage
 
 google_api_key = os.environ.get('google_api_key')
 
@@ -34,3 +35,15 @@ def analyze_sentiment(text):
     score = round(sentiment.document_sentiment.score, 2)
     label = "Positive" if score > 0 else "Negative" if score < 0 else "Neutral"
     return score, label
+
+def bucket_connection(bucket_name):
+    storage_client = storage.Client()
+    return storage_client.bucket(bucket_name)
+
+bucket_name = "audio-files-cai"
+bucket_connection = bucket_connection(bucket_name)
+
+def upload_file(file, bucket_object_name):
+    blob = bucket_connection.blob(bucket_object_name)
+    blob.upload_from_file(file)
+    return blob.public_url

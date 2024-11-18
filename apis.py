@@ -2,6 +2,7 @@ import time
 from flask import request, jsonify, Blueprint, send_from_directory, send_file
 from io import BytesIO
 from google_apis import text_to_audio,audio_to_text,analyze_sentiment
+from datetime import datetime
 
 texttospeech_api = Blueprint('texttospeech', __name__)
 speechtotext_api = Blueprint('speechtotext_api', __name__)
@@ -24,10 +25,20 @@ def audiototext_route():
    if not file or not file.readable():
        return jsonify({'error': 'Invalid file'}), 400
 
+   timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+   local_path = f"temp_{timestamp}_{file.filename}"
+   file.save(local_path)
+   file.seek(0)
+   try:
+       upload_file(image, f"{timestamp}/{local_path}")
+   except Exception as e:
+       os.remove(local_path)
+       return jsonify({"error": f"Failed to upload image"}), 500
+
    audio_content = file.read()
-   text = audio_to_text(audio_content)
-   score = analyze_sentiment(text)
-   return jsonify({'transcription': text,'sentiment':score})
+   #text = audio_to_text(audio_content)
+   #score = analyze_sentiment(text)
+   return jsonify({'transcription': "hello",'sentiment':"123"})
 
 
 
