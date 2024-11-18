@@ -5,11 +5,6 @@ import json
 import vertexai
 import base64
 from vertexai.generative_models import GenerativeModel, Part
-import logging
-
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 prompt = """
 Please provide an exact trascript for the audio, followed by sentiment analysis.
@@ -61,5 +56,4 @@ def upload_file(file, bucket_object_name):
     blob = bucket_connection.blob(bucket_object_name)
     blob.upload_from_file(file)
     path = "gs://" + bucket_name + "/" + bucket_object_name
-    logger.info(f"------------------- File uploaded to url: {path}")
     return path
