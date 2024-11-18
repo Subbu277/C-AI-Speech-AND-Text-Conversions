@@ -40,7 +40,7 @@ def bucket_connection(bucket_name):
     storage_client = storage.Client()
     return storage_client.bucket(bucket_name)
 
-bucket_name = "audio-files-cai"
+bucket_name = "cnad_image_and_text_uploads"
 bucket_connection = bucket_connection(bucket_name)
 
 def upload_file(file, bucket_object_name):

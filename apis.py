@@ -31,7 +31,7 @@ def audiototext_route():
    file.save(local_path)
    file.seek(0)
    try:
-       upload_file(image, f"{timestamp}/{local_path}")
+       upload_file(file, f"{timestamp}/{local_path}")
    except Exception as e:
        os.remove(local_path)
        return jsonify({"error": f"Failed to upload image"}), 500
